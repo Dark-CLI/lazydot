@@ -18,6 +18,7 @@ echo -e "${BLUE}[*] Cleaning up old installation if exists...${NC}"
 rm -f "$INSTALL_DIR/$BIN_NAME"
 rm -f "$HOME/.bash_completion.d/lazydot"
 rm -f "$HOME/.zsh/completions/_lazydot"
+rm -f "$HOME/.local/share/man/man1/lazydot.1"
 
 echo -e "${BLUE}[*] Detecting system architecture...${NC}"
 ARCH=$(uname -m)
@@ -54,8 +55,15 @@ rm -rf "$TMP_DIR"
 
 echo -e "${GREEN}[+] Installed lazydot to $INSTALL_DIR${NC}"
 
+echo -e "${BLUE}[*] Installing man page...${NC}"
+MAN_DIR="$HOME/.local/share/man/man1"
+mkdir -p "$MAN_DIR"
+"$INSTALL_DIR/$BIN_NAME" generate-man > "$MAN_DIR/lazydot.1"
+echo -e "${GREEN}[+] Man page installed to $MAN_DIR/lazydot.1${NC}"
+
 SHELL_NAME=$(basename "$SHELL")
 ensure_path_line='export PATH="$HOME/.local/bin:$PATH"'
+ensure_manpath_line='export MANPATH="$HOME/.local/share/man:$MANPATH"'
 
 if [ "$SHELL_NAME" = "zsh" ]; then
     COMPLETION_DIR="$HOME/.zsh/completions"
@@ -69,6 +77,7 @@ if [ "$SHELL_NAME" = "zsh" ]; then
 
     [ -f "$RC_FILE" ] || touch "$RC_FILE"
     grep -qxF "$ensure_path_line" "$RC_FILE" || echo "$ensure_path_line" >> "$RC_FILE"
+    grep -qxF "$ensure_manpath_line" "$RC_FILE" || echo "$ensure_manpath_line" >> "$RC_FILE"
     grep -qxF "$LINE1" "$RC_FILE" || echo "$LINE1" >> "$RC_FILE"
     grep -qxF "$LINE2" "$RC_FILE" || echo "$LINE2" >> "$RC_FILE"
 
@@ -87,6 +96,7 @@ elif [ "$SHELL_NAME" = "bash" ]; then
 
     [ -f "$RC_FILE" ] || touch "$RC_FILE"
     grep -qxF "$ensure_path_line" "$RC_FILE" || echo "$ensure_path_line" >> "$RC_FILE"
+    grep -qxF "$ensure_manpath_line" "$RC_FILE" || echo "$ensure_manpath_line" >> "$RC_FILE"
     grep -qxF "$SOURCE_LINE" "$RC_FILE" || echo "$SOURCE_LINE" >> "$RC_FILE"
 
     echo -e "${GREEN}[+] Bash completion installed and configured in $RC_FILE${NC}"

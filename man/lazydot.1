@@ -1,0 +1,133 @@
+.TH LAZYDOT 1 "January 2026" "lazydot v0.4.0" "User Commands"
+.SH NAME
+lazydot \- A minimal, explicit dotfile manager using symlinks
+.SH SYNOPSIS
+.B lazydot
+[\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] \fIcommand\fR [\fIargs\fR]
+.SH DESCRIPTION
+.B lazydot
+is a CLI tool that manages dotfiles by creating symlinks from your home directory to a central dotfiles repository. Unlike other dotfile managers that mirror entire directories or auto-discover files, lazydot gives you explicit control over exactly which paths are managed.
+.PP
+Your actual files live in a \fIdotfolder\fR (e.g., \fI~/gitdot\fR), and lazydot creates symlinks in your home directory pointing to them. This allows you to version control your configurations with git while keeping them in their expected locations.
+.SH PHILOSOPHY
+.TP
+.B Explicit over implicit
+You decide exactly which files and directories to track. No auto-discovery, no surprises.
+.TP
+.B Simple symlinks
+Uses standard filesystem symlinks. No copying, no templating, no magic.
+.TP
+.B Minimal configuration
+One TOML file (\fI~/.config/lazydot.toml\fR) lists your managed paths. That's it.
+.TP
+.B Portable
+Your dotfolder is a regular directory. Clone it anywhere, run \fBlazydot sync\fR, done.
+.SH COMMANDS
+.TP
+.B add \fIpath\fR [\fIpath\fR...]
+Register one or more paths to be managed. Paths can be files or directories.
+.TP
+.B remove \fIpath\fR [\fIpath\fR...]
+Remove paths from the configuration. Does not delete actual files.
+.TP
+.B sync
+Create or update all symlinks. Copies files to the dotfolder if needed, then replaces originals with symlinks.
+.TP
+.B status
+Show what would be added or removed on the next sync.
+.TP
+.B check
+Display the current state of each managed path (linked, broken, missing, etc.).
+.TP
+.B disable\-link [\fB\-\-all\fR] [\fIpath\fR...]
+Remove symlinks and restore original files from the dotfolder. Use \fB\-\-all\fR to unlink everything.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Print help information.
+.TP
+.B \-V, \-\-version
+Print version information.
+.SH CONFIGURATION
+Configuration is stored in \fI~/.config/lazydot.toml\fR:
+.PP
+.nf
+.RS
+dotfolder_path = "~/gitdot"
+paths = [
+    "~/.config/nvim",
+    "~/.bashrc",
+    "~/.config/alacritty"
+]
+
+[defaults]
+on_duplicate = "overwritehome"
+on_delink = "keep"
+.RE
+.fi
+.TP
+.B dotfolder_path
+Directory where your dotfiles are stored (your git repository).
+.TP
+.B paths
+List of paths to manage. Use \fB~\fR for home directory.
+.TP
+.B on_duplicate
+What to do when a file exists in both home and dotfolder: \fIask\fR, \fIoverwritehome\fR, \fIoverwritedotfile\fR, \fIbackuphome\fR, or \fIskip\fR.
+.TP
+.B on_delink
+What to do with dotfolder copy when unlinking: \fIkeep\fR or \fIremove\fR.
+.SH EXAMPLES
+.TP
+.B Add your neovim config:
+.nf
+lazydot add ~/.config/nvim
+lazydot sync
+.fi
+.TP
+.B Add multiple paths at once:
+.nf
+lazydot add ~/.bashrc ~/.zshrc ~/.config/alacritty
+lazydot sync
+.fi
+.TP
+.B Check status of all managed paths:
+.nf
+lazydot check
+.fi
+.TP
+.B Stop managing a path (keep files):
+.nf
+lazydot disable-link ~/.bashrc
+lazydot remove ~/.bashrc
+.fi
+.TP
+.B Set up on a new machine:
+.nf
+git clone https://github.com/user/dotfiles ~/gitdot
+lazydot sync
+.fi
+.SH FILES
+.TP
+.I ~/.config/lazydot.toml
+Main configuration file.
+.TP
+.I ~/gitdot/
+Default dotfolder location (configurable).
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B non-zero
+An error occurred. Error messages are printed to stderr.
+.SH AUTHOR
+Written by Dark-CLI.
+.SH REPORTING BUGS
+Report bugs at: \fIhttps://github.com/Dark-CLI/lazydot/issues\fR
+.SH COPYRIGHT
+Copyright \(co 2024-2026 Dark-CLI. Licensed under the MIT License.
+.SH SEE ALSO
+.BR ln (1),
+.BR git (1),
+.BR stow (8)

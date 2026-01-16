@@ -47,6 +47,10 @@ pub enum Command {
         #[arg(value_enum)]
         shell: clap_complete::Shell,
     },
+    
+    /// Output man page to stdout.
+    #[clap(hide = true)]
+    GenerateMan,
 }
 #[derive(Debug, Args)]
 pub struct StatusArgs {}

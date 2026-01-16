@@ -16,7 +16,7 @@ use args::LazyDotsArgs;
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, Shell};
 use config::Config;
-use std::io;
+use std::io::{self, Write};
 
 fn main() {
     let args = LazyDotsArgs::parse();
@@ -68,6 +68,10 @@ fn main() {
         Command::Check(_) => {
             let manager = DotManager::new();
             manager.check();
+        }
+        Command::GenerateMan => {
+            const MAN_PAGE: &str = include_str!("../man/lazydot.1");
+            io::stdout().write_all(MAN_PAGE.as_bytes()).expect("Failed to write man page");
         }
     }
 }

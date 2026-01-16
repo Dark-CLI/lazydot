@@ -45,13 +45,19 @@ impl DotManager {
             let (path_in_home, path_in_dotfolder) = get_home_and_dot_path(path);
 
             if path_in_home.is_symlink() && !path_in_home.exists() {
-                delete(&path_in_home);
+                if let Err(e) = delete(&path_in_home) {
+                    println!("{} Failed to delete broken symlink: {}", Red.paint("✘"), e);
+                    continue;
+                }
             }
 
             match (path_in_home.exists(), path_in_dotfolder.exists()) {
                 (true, false) => {
                     copy_all(&path_in_home, &path_in_dotfolder).unwrap();
-                    delete(&path_in_home);
+                    if let Err(e) = delete(&path_in_home) {
+                        println!("{} Failed to delete {}: {}", Red.paint("✘"), path_in_home.display(), e);
+                        continue;
+                    }
                     if let Err(e) = symlink(&path_in_dotfolder, &path_in_home) {
                         println!("{} Failed to create symlink: {}", Red.paint("✘"), e);
                         continue;
@@ -75,16 +81,25 @@ impl DotManager {
                         duplicated_paths.push((path_in_home, path_in_dotfolder));
                     }
                     DuplicateBehavior::OverwriteHome => {
-                        delete(&path_in_home);
+                        if let Err(e) = delete(&path_in_home) {
+                            println!("{} Failed to delete {}: {}", Red.paint("✘"), path_in_home.display(), e);
+                            continue;
+                        }
                         if let Err(e) = symlink(&path_in_dotfolder, &path_in_home) {
                             println!("{} Failed to create symlink: {}", Red.paint("✘"), e);
                             continue;
                         }
                     }
                     DuplicateBehavior::OverwriteDotfile => {
-                        delete(&path_in_dotfolder);
+                        if let Err(e) = delete(&path_in_dotfolder) {
+                            println!("{} Failed to delete {}: {}", Red.paint("✘"), path_in_dotfolder.display(), e);
+                            continue;
+                        }
                         copy_all(&path_in_home, &path_in_dotfolder).unwrap();
-                        delete(&path_in_home);
+                        if let Err(e) = delete(&path_in_home) {
+                            println!("{} Failed to delete {}: {}", Red.paint("✘"), path_in_home.display(), e);
+                            continue;
+                        }
                         if let Err(e) = symlink(&path_in_dotfolder, &path_in_home) {
                             println!("{} Failed to create symlink: {}", Red.paint("✘"), e);
                             continue;
@@ -150,9 +165,15 @@ impl DotManager {
         for index in &selected_indices {
             print!("{}", Blue.paint("Overwriting Home with Dotfile: "));
             let path = duplicated_paths.get(*index).expect("Index out of range");
-            delete(&path.1);
+            if let Err(e) = delete(&path.1) {
+                println!("{} Failed to delete {}: {}", Red.paint("✘"), path.1.display(), e);
+                continue;
+            }
             copy_all(&path.0, &path.1).unwrap();
-            delete(&path.0);
+            if let Err(e) = delete(&path.0) {
+                println!("{} Failed to delete {}: {}", Red.paint("✘"), path.0.display(), e);
+                continue;
+            }
             if let Err(e) = symlink(&path.1, &path.0) {
                 println!("{} Failed to create symlink: {}", Red.paint("✘"), e);
                 continue;
@@ -165,7 +186,10 @@ impl DotManager {
                 continue;
             }
             print!("{}", Blue.paint("Keeping Home: "));
-            delete(&path.0);
+            if let Err(e) = delete(&path.0) {
+                println!("{} Failed to delete {}: {}", Red.paint("✘"), path.0.display(), e);
+                continue;
+            }
             if let Err(e) = symlink(&path.1, &path.0) {
                 println!("{} Failed to create symlink: {}", Red.paint("✘"), e);
                 continue;
@@ -205,13 +229,19 @@ impl DotManager {
                 continue;
             }
 
-            delete(&path_in_home);
+            if let Err(e) = delete(&path_in_home) {
+                println!("{} Failed to delete {}: {}", Red.paint("✘"), path_in_home.display(), e);
+                continue;
+            }
             copy_all(&path_in_dotfolder, &path_in_home)
                 .expect("Failed to copy from dotfolder to home");
 
             match self.config.defaults.on_delink {
                 OnDelinkBehavior::Remove => {
-                    delete(&path_in_dotfolder);
+                    if let Err(e) = delete(&path_in_dotfolder) {
+                        println!("{} Failed to delete {}: {}", Red.paint("✘"), path_in_dotfolder.display(), e);
+                        continue;
+                    }
                 }
                 OnDelinkBehavior::Keep => {}
             }

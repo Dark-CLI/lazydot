@@ -56,7 +56,7 @@ impl Config {
             config_file = global_config_path;
         } else if case_checked.1 {
             if global_config_path.is_symlink() {
-                delete(&global_config_path);
+                let _ = delete(&global_config_path); // Ignore error, symlink creation will fail if needed
             }
             symlink(&local_config_path, &global_config_path)
                 .expect("Failed to symlink the local config file with the global config file");
@@ -136,9 +136,12 @@ impl Config {
     }
 
     pub fn remove_path(&mut self, path: String) {
-        let path = self.restrict_to_home(path).unwrap();
+        // Try to normalize the path, but if it fails (e.g., path doesn't exist),
+        // still try to match the raw input against stored paths
+        let normalized = self.restrict_to_home(path.clone()).ok();
+        
         for (i, v) in self.paths.iter().enumerate() {
-            if *v == path {
+            if Some(v.clone()) == normalized || *v == path {
                 self.paths.remove(i);
                 self.save();
                 return;

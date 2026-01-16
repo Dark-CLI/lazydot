@@ -113,7 +113,7 @@ pub(crate) mod test {
         create_file(&file_path, "hi");
 
         assert!(file_path.exists());
-        delete(&file_path);
+        delete(&file_path).unwrap();
         assert!(!file_path.exists());
     }
 
@@ -126,7 +126,7 @@ pub(crate) mod test {
         create_dir(&nested_dir);
         assert!(nested_dir.exists());
 
-        delete(&nested_dir);
+        delete(&nested_dir).unwrap();
         assert!(!nested_dir.exists());
     }
 
@@ -136,7 +136,7 @@ pub(crate) mod test {
         let _tmp_home = setup_env();
         let dir = tempdir().unwrap();
         let fake_path = dir.path().join("nonexistent");
-        let result = std::panic::catch_unwind(|| delete(&fake_path));
+        let result = delete(&fake_path);
         assert!(result.is_err());
     }
 

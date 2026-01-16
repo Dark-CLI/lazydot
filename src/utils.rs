@@ -50,21 +50,18 @@ pub fn get_home_dir() -> PathBuf {
 pub fn get_home_dir_string() -> String {
     env::var("HOME").expect("missing HOME environment variable")
 }
-pub fn delete(path: &PathBuf) {
+pub fn delete(path: &PathBuf) -> Result<(), std::io::Error> {
     if path.is_file() || path.is_symlink() {
-        fs::remove_file(path).expect(&format!("Failed to delete {}", path.display()));
+        fs::remove_file(path)?;
+    } else if path.is_dir() {
+        fs::remove_dir_all(path)?;
+    } else {
+        return Err(std::io::Error::new(
+            ErrorKind::NotFound,
+            format!("Path \"{}\" is not a valid file or directory", path.display()),
+        ));
     }
-    // Check if it's a directory and remove the directory recursively
-    else if path.is_dir() {
-        fs::remove_dir_all(path).expect(&format!("Failed to delete {}", path.display()));
-    }
-    // If it's neither a symlink, file, nor directory
-    else {
-        panic!(
-            "Path: \"{}\" is not a valid file, or directory",
-            path.display()
-        );
-    }
+    Ok(())
 }
 
 pub fn copy_all(source_path: &PathBuf, target_path: &PathBuf) -> Result<(), std::io::Error> {
