@@ -114,14 +114,13 @@ impl Config {
     fn restrict_to_home(&mut self, path: String) -> Result<String, String> {
         let mut path = check_path(&path)?;
         if path.starts_with(&self.dotfolder_path) {
-            let relative_path = path
-                .strip_prefix(&self.dotfolder_path)
+            // Use PathBuf operations to properly handle path separators
+            let path_buf = expand_path(&path);
+            let dotfolder_buf = expand_path(&self.dotfolder_path);
+            let relative_path = path_buf
+                .strip_prefix(&dotfolder_buf)
                 .expect("Failed to strip prefix");
-            path = get_home_dir()
-                .join(relative_path)
-                .to_str()
-                .ok_or("Failed to convert home directory path to string")?
-                .to_string();
+            path = format!("~/{}", relative_path.display());
         }
         Ok(path)
     }
